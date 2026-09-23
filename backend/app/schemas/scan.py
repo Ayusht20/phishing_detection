@@ -1,4 +1,4 @@
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel, ConfigDict, HttpUrl
 
 
 class ScanRequest(BaseModel):
@@ -10,3 +10,5 @@ class ScanResponse(BaseModel):
     content: str
     result: str
     risk_level: str
+
+    model_config = ConfigDict(from_attributes=True)

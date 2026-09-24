@@ -18,12 +18,27 @@ export default function Login() {
     setError('');
     setLoading(true);
 
-    try {
-      const res = await api.post(ENDPOINTS.AUTH.LOGIN, { email, password });
-      localStorage.setItem('token', res.data.access_token);
-      localStorage.setItem('userName', res.data.name);
-      router.push('/dashboard');
-    } catch (err) {
+ try {
+  const res = await api.post(ENDPOINTS.AUTH.LOGIN, { email, password });
+  
+  console.log("LOGIN RESPONSE DATA:", res.data); // <--- Add this log
+
+  const { access_token, name, role } = res.data;
+
+  localStorage.setItem('token', access_token);
+  localStorage.setItem('userName', name || '');
+  if (role) {
+    localStorage.setItem('userRole', role);
+  }
+
+  alert("Detected role: " + role); // <--- Add this quick alert
+
+  if (role === 'admin') {
+    router.push('/admin/dashboard');
+  } else {
+    router.push('/dashboard');
+  }
+} catch (err) {
       setError(err.response?.data?.detail || 'Invalid email or password');
     } finally {
       setLoading(false);

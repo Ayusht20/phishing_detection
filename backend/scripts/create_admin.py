@@ -1,3 +1,8 @@
+import sys
+import os
+
+# Adds the backend root directory to Python's path so imports work
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from getpass import getpass
 
 from app.database import SessionLocal, Base, engine
@@ -19,7 +24,7 @@ def main():
             return
 
         name = input("Admin name: ").strip()
-        password = getpass("Admin password: ")
+        password = input("Admin password: ")
         if len(password) < 8:
             print("Password must be at least 8 characters.")
             return

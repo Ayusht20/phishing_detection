@@ -17,19 +17,25 @@ def register(user_data: UserRegister, db: Session = Depends(get_db)):
     new_user = User(
         name=user_data.name,
         email=user_data.email,
-        hashed_password=hash_password(user_data.password)
+        hashed_password=hash_password(user_data.password),
+        role="user"
     )
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
 
-    token = create_access_token({"sub": str(new_user.id), "email": new_user.email})
+    token = create_access_token({
+        "sub": str(new_user.id),
+        "email": new_user.email,
+        "role": new_user.role
+    })
     return {
         "access_token": token,
         "token_type": "bearer",
         "user_id": new_user.id,
         "name": new_user.name,
-        "email": new_user.email
+        "email": new_user.email,
+        "role": new_user.role
     }
 
 @router.post("/login", response_model=TokenResponse)
@@ -41,11 +47,16 @@ def login(credentials: UserLogin, db: Session = Depends(get_db)):
             detail="Invalid email or password"
         )
 
-    token = create_access_token({"sub": str(user.id), "email": user.email})
+    token = create_access_token({
+        "sub": str(user.id),
+        "email": user.email,
+        "role": user.role
+    })
     return {
         "access_token": token,
         "token_type": "bearer",
         "user_id": user.id,
         "name": user.name,
-        "email": user.email
+        "email": user.email,
+        "role": user.role
     }

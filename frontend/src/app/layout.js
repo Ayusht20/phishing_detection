@@ -12,8 +12,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "PhishGuard",
-  description: "Preventions from cyberattacks",
+ title: "PhishGuard",
+  description: "Prevent yourself from phishings!",
 };
 
 export default function RootLayout({ children }) {

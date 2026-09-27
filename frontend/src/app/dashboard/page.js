@@ -18,19 +18,85 @@ import {
   Gauge as GaugeIcon,
   CheckCircle2,
   CircleDashed,
+  Info,
 } from 'lucide-react';
 
 function classNames(...values) {
   return values.filter(Boolean).join(' ');
 }
 
+// Small "i" button that reveals how a score/verdict was derived. Purely
+// informational — doesn't read or change any scan state.
+function InfoTooltip({ title, items, align = 'right' }) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const handleClickOutside = (event) => {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [open]);
+
+  return (
+    <div ref={containerRef} className="relative inline-flex">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-label="How this score is calculated"
+        className={classNames(
+          'flex h-4 w-4 items-center justify-center rounded-full border transition-colors',
+          open
+            ? 'border-blue-500 bg-blue-500/20 text-blue-300'
+            : 'border-slate-700 text-slate-500 hover:border-slate-500 hover:text-slate-300'
+        )}
+      >
+        <Info className="h-2.5 w-2.5" />
+      </button>
+
+      {open && (
+        <div
+          className={classNames(
+            'absolute top-6 z-20 w-64 rounded-lg border border-slate-700 bg-slate-900 p-3 text-left shadow-xl',
+            align === 'right' ? 'right-0' : 'left-0'
+          )}
+        >
+          <p className="text-xs font-semibold text-slate-200">{title}</p>
+          <ul className="mt-2 space-y-1.5">
+            {items.map((item) => (
+              <li key={item} className="flex gap-1.5 text-[11px] leading-relaxed text-slate-400">
+                <span className="mt-1 h-1 w-1 flex-shrink-0 rounded-full bg-slate-600" />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const URL_SCORE_INFO = [
+  'Checked against Google Safe Browsing\u2019s threat lists for known malware and phishing pages.',
+  'Cross-referenced with VirusTotal\u2019s aggregated reputation data from many security engines.',
+  'Structural checks: URL shorteners, raw IP addresses, insecure (http) links, high-risk domain endings, and unusually complex domains.',
+];
+
+const EMAIL_SCORE_INFO = [
+  'Weighted keyword categories: urgency/pressure language, threats (e.g. account suspension), credential or OTP requests, and money/prize bait.',
+  'Embedded links are checked for shorteners, risky domains, and insecure (http) links.',
+  'Sender domain is compared against the claimed brand (e.g. a "bank" email sent from a free provider).',
+  'When available, an AI model (Groq or Gemini) reviews the full email and contributes its own verdict and confidence.',
+];
+
 function RadarMark({ className = 'h-9 w-9' }) {
   return (
-    <div className={classNames('relative flex items-center justify-center', className)}>
-      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-500/20" />
-      <div className="relative flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-blue-500/20 to-cyan-500/10 ring-1 ring-blue-500/30">
-        <ShieldCheck className="h-1/2 w-1/2 text-blue-400" />
-      </div>
+    <div className={classNames('flex items-center justify-center rounded-full bg-gradient-to-br from-blue-500/20 to-cyan-500/10 ring-1 ring-blue-500/30', className)}>
+      <ShieldCheck className="h-1/2 w-1/2 text-blue-400" />
     </div>
   );
 }
@@ -130,22 +196,16 @@ function AnalysisLoader({ active, steps, accent }) {
 
   return (
     <div className="mt-4 flex flex-col items-center">
-      <div className="relative flex h-28 w-28 items-center justify-center">
+      <div className="relative flex h-20 w-20 items-center justify-center">
         <div
           className={classNames(
-            'absolute h-full w-full animate-spin rounded-full',
-            accent === 'blue'
-              ? 'bg-[conic-gradient(from_0deg,transparent_0deg,rgba(59,130,246,0.55)_60deg,transparent_120deg)]'
-              : 'bg-[conic-gradient(from_0deg,transparent_0deg,rgba(16,185,129,0.55)_60deg,transparent_120deg)]'
+            'absolute h-full w-full animate-spin rounded-full border-2 border-transparent',
+            accent === 'blue' ? 'border-t-blue-400' : 'border-t-emerald-400'
           )}
-          style={{ animationDuration: '1.6s' }}
+          style={{ animationDuration: '0.9s' }}
         />
-        <div className="absolute h-[86%] w-[86%] rounded-full bg-slate-900" />
         <Radar
-          className={classNames(
-            'relative h-8 w-8 animate-pulse',
-            accent === 'blue' ? 'text-blue-400' : 'text-emerald-400'
-          )}
+          className={classNames('h-7 w-7', accent === 'blue' ? 'text-blue-400' : 'text-emerald-400')}
         />
       </div>
 
@@ -318,8 +378,8 @@ export default function Dashboard() {
           backgroundSize: '32px 32px',
         }}
       />
-      <div className="pointer-events-none absolute -top-40 left-1/4 h-96 w-[36rem] rounded-full bg-blue-600/10 blur-[130px]" />
-      <div className="pointer-events-none absolute -top-20 right-1/4 h-80 w-[30rem] rounded-full bg-emerald-600/10 blur-[130px]" />
+      <div className="pointer-events-none absolute -top-32 left-1/4 h-72 w-96 rounded-full bg-blue-600/10 blur-3xl" />
+      <div className="pointer-events-none absolute -top-16 right-1/4 h-64 w-80 rounded-full bg-emerald-600/10 blur-3xl" />
 
       {/* Top Navbar */}
       <header className="sticky top-0 z-10 border-b border-slate-800 bg-slate-950/90 backdrop-blur">
@@ -444,8 +504,9 @@ export default function Dashboard() {
                 urlResult && urlVerdict.glowClass
               )}
             >
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-500">
                 {urlLoading ? 'Analyzing…' : 'Scan Verdict'}
+                {!urlLoading && <InfoTooltip title="How this verdict is calculated" items={URL_SCORE_INFO} />}
               </h3>
 
               {urlLoading ? (
@@ -647,6 +708,7 @@ export default function Dashboard() {
             >
               <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-500">
                 <GaugeIcon className="h-3.5 w-3.5" /> {emailLoading ? 'Analyzing…' : 'Threat Outcome'}
+                {!emailLoading && <InfoTooltip title="How this score is calculated" items={EMAIL_SCORE_INFO} />}
               </h3>
 
               {emailLoading ? (
@@ -673,6 +735,12 @@ export default function Dashboard() {
                     {emailResult.result}
                   </div>
 
+                  <div className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950 p-3 text-xs">
+                    <span className="flex items-center gap-1.5 text-slate-500">
+                      <Cpu className="h-3.5 w-3.5" /> Engine
+                    </span>
+                    <span className="font-mono text-slate-300">{emailResult.analyzed_by}</span>
+                  </div>
                 </div>
               )}
             </div>

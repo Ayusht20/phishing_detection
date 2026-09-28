@@ -734,13 +734,13 @@ export default function Dashboard() {
                     <emailVerdict.Icon className="h-4 w-4" />
                     {emailResult.result}
                   </div>
-
+{/* 
                   <div className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950 p-3 text-xs">
                     <span className="flex items-center gap-1.5 text-slate-500">
                       <Cpu className="h-3.5 w-3.5" /> Engine
                     </span>
                     <span className="font-mono text-slate-300">{emailResult.analyzed_by}</span>
-                  </div>
+                  </div> */}
                 </div>
               )}
             </div>

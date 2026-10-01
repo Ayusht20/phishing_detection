@@ -16,8 +16,8 @@ import {
   Gauge,
   History,
 } from 'lucide-react';
-import api from '../../services/api';
-import { ENDPOINTS } from '../../constants/apiEndpoints';
+import api from '@/services/api';
+import { ENDPOINTS } from '@/constants/apiEndpoints';
 
 const VALUE_PROPS = [
   {
@@ -147,9 +147,10 @@ export default function Register() {
     setLoading(true);
 
     try {
-      const res = await api.post(ENDPOINTS.AUTH.REGISTER, {
-        name,
-        email,
+      const endpoint = ENDPOINTS?.AUTH?.REGISTER || ENDPOINTS?.REGISTER || '/api/auth/register';
+      const res = await api.post(endpoint, {
+        name: name.trim(),
+        email: email.trim(),
         password,
       });
 

@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import axios from 'axios';
+import api from '@/services/api';
+import { ENDPOINTS } from '@/constants/apiEndpoints';
 import {
   ShieldCheck,
   ShieldAlert,
@@ -13,20 +14,20 @@ import {
   Loader2,
   AlertTriangle,
   Radar,
-  Cpu,
   Target,
   Gauge as GaugeIcon,
   CheckCircle2,
   CircleDashed,
   Info,
+  History,
+  RotateCw,
 } from 'lucide-react';
 
 function classNames(...values) {
   return values.filter(Boolean).join(' ');
 }
 
-// Small "i" button that reveals how a score/verdict was derived. Purely
-// informational — doesn't read or change any scan state.
+// Small "i" button that reveals how a score/verdict was derived.
 function InfoTooltip({ title, items, align = 'right' }) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef(null);
@@ -81,16 +82,16 @@ function InfoTooltip({ title, items, align = 'right' }) {
 }
 
 const URL_SCORE_INFO = [
-  'Checked against Google Safe Browsing\u2019s threat lists for known malware and phishing pages.',
-  'Cross-referenced with VirusTotal\u2019s aggregated reputation data from many security engines.',
-  'Structural checks: URL shorteners, raw IP addresses, insecure (http) links, high-risk domain endings, and unusually complex domains.',
+  'Checked against Google Safe Browsing threat databases for verified malware and phishing paths.',
+  'Cross-referenced with VirusTotal aggregated reputation telemetry from multivendor antivirus engines.',
+  'Structural heuristics: URL shortener obfuscation, raw IP formats, insecure HTTP schemes, and risky domain endings.',
 ];
 
 const EMAIL_SCORE_INFO = [
-  'Weighted keyword categories: urgency/pressure language, threats (e.g. account suspension), credential or OTP requests, and money/prize bait.',
-  'Embedded links are checked for shorteners, risky domains, and insecure (http) links.',
-  'Sender domain is compared against the claimed brand (e.g. a "bank" email sent from a free provider).',
-  'When available, an AI model (Groq or Gemini) reviews the full email and contributes its own verdict and confidence.',
+  'Weighted keyword indicators: urgency language, account suspension threats, OTP/credential queries, and prize/payment lures.',
+  'Embedded hyperlinks audited for URL shorteners, risky TLDs, and insecure transport.',
+  'Sender domain verification comparing claimed enterprise identity against free/public email providers.',
+  'Deep semantic evaluation by proprietary Neural AI models inspecting structural context and confidence levels.',
 ];
 
 function RadarMark({ className = 'h-9 w-9' }) {
@@ -130,8 +131,6 @@ function verdictMeta(result) {
   };
 }
 
-// Purely presentational: turns a risk_level string into a fill width/color for
-// the meter. Doesn't touch or reshape the underlying API data.
 function riskLevelMeta(level) {
   const value = (level || '').toString().toLowerCase();
   if (value === 'critical') return { width: '100%', color: 'bg-red-500', text: 'text-red-400' };
@@ -173,9 +172,6 @@ function ScoreGauge({ score = 0 }) {
   );
 }
 
-// Cosmetic "in progress" checklist. Cycles through the given step labels while
-// `active` is true. Purely a visual holder for wait time — it does not gate,
-// delay, or otherwise touch the real axios request or its result.
 function AnalysisLoader({ active, steps, accent }) {
   const [stepIndex, setStepIndex] = useState(0);
   const timerRef = useRef(null);
@@ -254,11 +250,133 @@ const EMAIL_SCAN_STEPS = [
   'Auditing embedded links',
 ];
 
+// Scan History Table Component
+function ScanHistorySection({ refreshTrigger }) {
+  const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const fetchHistory = async () => {
+    try {
+      const res = await api.get(ENDPOINTS.SCAN_HISTORY || '/api/scan/history');
+      setHistory(Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      setError('Unable to load inspection history.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchHistory();
+  }, [refreshTrigger]);
+
+  const parseTarget = (content) => {
+    if (typeof content === 'string' && content.startsWith('[EMAIL]')) {
+      return {
+        type: 'email',
+        label: content.replace('[EMAIL]', '').trim(),
+      };
+    }
+    return {
+      type: 'url',
+      label: content || 'Unknown Target',
+    };
+  };
+
+  return (
+    <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 shadow-sm space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20">
+            <History className="h-4 w-4" />
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-white">Recent Inspection Logs</h3>
+            <p className="text-xs text-slate-400">Audit trail of previously analyzed URLs and email payloads.</p>
+          </div>
+        </div>
+        <button
+          onClick={fetchHistory}
+          className="flex items-center gap-1.5 rounded-lg border border-slate-800 bg-slate-950 px-3 py-1.5 text-xs text-slate-400 transition hover:border-slate-700 hover:text-white"
+        >
+          <RotateCw className="h-3 w-3" />
+          Refresh
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="py-8 text-center text-xs text-slate-500">Loading historical audit data...</div>
+      ) : error ? (
+        <div className="py-4 text-center text-xs text-red-400">{error}</div>
+      ) : history.length === 0 ? (
+        <div className="py-8 text-center text-xs text-slate-500">
+          No scans recorded yet. Run a URL or Email check above to populate records.
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs text-slate-300">
+            <thead className="border-b border-slate-800 bg-slate-950/60 uppercase tracking-wider text-[10px] text-slate-400">
+              <tr>
+                <th className="py-3 px-4">Type</th>
+                <th className="py-3 px-4">Target / Content</th>
+                <th className="py-3 px-4">Verdict</th>
+                <th className="py-3 px-4">Risk Level</th>
+                <th className="py-3 px-4 text-right">Timestamp</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-800/60">
+              {history.map((scan) => {
+                const target = parseTarget(scan.content);
+                const verdictStyle = verdictMeta(scan.result);
+                return (
+                  <tr key={scan.id} className="transition hover:bg-slate-800/40">
+                    <td className="whitespace-nowrap py-3 px-4">
+                      {target.type === 'email' ? (
+                        <span className="inline-flex items-center gap-1.5 text-emerald-400 font-medium">
+                          <Mail className="h-3.5 w-3.5" /> Email
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 text-blue-400 font-medium">
+                          <Link2 className="h-3.5 w-3.5" /> URL
+                        </span>
+                      )}
+                    </td>
+                    <td className="max-w-xs truncate py-3 px-4 font-mono text-slate-200">
+                      {target.label}
+                    </td>
+                    <td className="whitespace-nowrap py-3 px-4">
+                      <span className={classNames('px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider', verdictStyle.badgeClass)}>
+                        {scan.result}
+                      </span>
+                    </td>
+                    <td className="whitespace-nowrap py-3 px-4 text-[11px] font-semibold uppercase text-slate-400">
+                      {scan.risk_level || 'N/A'}
+                    </td>
+                    <td className="whitespace-nowrap py-3 px-4 text-right text-slate-500">
+                      {new Date(scan.created_at).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        month: 'short',
+                        day: 'numeric',
+                      })}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const router = useRouter();
   const [userName, setUserName] = useState('');
   const [isChecking, setIsChecking] = useState(true);
-  const [activeTab, setActiveTab] = useState('url'); // 'url' or 'email'
+  const [activeTab, setActiveTab] = useState('url');
 
   // URL Scanner State
   const [urlInput, setUrlInput] = useState('');
@@ -273,6 +391,9 @@ export default function Dashboard() {
   const [emailLoading, setEmailLoading] = useState(false);
   const [emailResult, setEmailResult] = useState(null);
   const [emailError, setEmailError] = useState('');
+
+  // Scan History Refresh State
+  const [refreshHistory, setRefreshHistory] = useState(0);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -302,17 +423,11 @@ export default function Dashboard() {
 
     setUrlLoading(true);
     try {
-      const response = await axios.post(
-        'http://localhost:8000/api/scan/url',
-        { url: urlInput.trim() },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const response = await api.post(ENDPOINTS.SCAN_URL, {
+        url: urlInput.trim(),
+      });
       setUrlResult(response.data);
+      setRefreshHistory((prev) => prev + 1);
     } catch (err) {
       setUrlError(err.response?.data?.detail || 'Failed to scan URL. Please verify server status.');
     } finally {
@@ -330,21 +445,13 @@ export default function Dashboard() {
 
     setEmailLoading(true);
     try {
-      const response = await axios.post(
-        'http://localhost:8000/api/scan/email',
-        {
-          sender: sender.trim(),
-          subject: subject.trim(),
-          body: body.trim(),
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const response = await api.post(ENDPOINTS.SCAN_EMAIL, {
+        sender: sender.trim(),
+        subject: subject.trim(),
+        body: body.trim(),
+      });
       setEmailResult(response.data);
+      setRefreshHistory((prev) => prev + 1);
     } catch (err) {
       setEmailError(err.response?.data?.detail || 'Failed to analyze email content.');
     } finally {
@@ -369,7 +476,7 @@ export default function Dashboard() {
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-slate-950 font-sans text-slate-100">
-      {/* Ambient background texture, purely decorative */}
+      {/* Ambient background glow and grid */}
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.1]"
         style={{
@@ -638,13 +745,11 @@ export default function Dashboard() {
 
               {emailResult && (
                 <div className="space-y-4 rounded-xl border border-slate-800 bg-slate-950 p-5">
-                  {/* Analysis Summary */}
                   <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-3.5 text-xs leading-relaxed text-slate-300">
                     <strong className="mb-1 block text-white">Executive Summary:</strong>
                     {emailResult.summary}
                   </div>
 
-                  {/* Red Flags */}
                   {emailResult.red_flags?.length > 0 && (
                     <div className="space-y-1.5">
                       <span className="text-xs font-semibold text-slate-400">Identified Indicators:</span>
@@ -662,7 +767,6 @@ export default function Dashboard() {
                     </div>
                   )}
 
-                  {/* Links Analysis Breakdown */}
                   {emailResult.links_found?.length > 0 && (
                     <div className="space-y-2 border-t border-slate-800/80 pt-2 text-xs">
                       <span className="font-semibold text-slate-400">
@@ -734,18 +838,14 @@ export default function Dashboard() {
                     <emailVerdict.Icon className="h-4 w-4" />
                     {emailResult.result}
                   </div>
-{/* 
-                  <div className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950 p-3 text-xs">
-                    <span className="flex items-center gap-1.5 text-slate-500">
-                      <Cpu className="h-3.5 w-3.5" /> Engine
-                    </span>
-                    <span className="font-mono text-slate-300">{emailResult.analyzed_by}</span>
-                  </div> */}
                 </div>
               )}
             </div>
           </div>
         )}
+
+        {/* Audit History Log Table */}
+        <ScanHistorySection refreshTrigger={refreshHistory} />
       </main>
     </div>
   );

@@ -1,5 +1,4 @@
 import logging
-from datetime import datetime
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -10,21 +9,11 @@ from app.database import get_db
 from app.models.scan import Scan
 from app.models.user import User
 from app.utils.security import get_current_user
-
+from app.schemas.scan import ScanHistoryItem
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/scan", tags=["Threat Scans"])
 
-
-# --- Schemas ---
-class ScanHistoryItem(BaseModel):
-    id: int
-    content: str
-    result: str
-    risk_level: Optional[str] = "unknown"
-    created_at: datetime
-
-    model_config = ConfigDict(from_attributes=True)
 
 
 # --- Endpoint ---

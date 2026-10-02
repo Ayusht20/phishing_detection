@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/services/api';
 import { ENDPOINTS } from '@/constants/apiEndpoints';
+import ScanHistory from '@/components/ScanHistory';
 import {
   ShieldCheck,
   ShieldAlert,
@@ -20,7 +21,6 @@ import {
   CircleDashed,
   Info,
   History,
-  RotateCw,
 } from 'lucide-react';
 
 function classNames(...values) {
@@ -250,127 +250,6 @@ const EMAIL_SCAN_STEPS = [
   'Auditing embedded links',
 ];
 
-// Scan History Table Component
-function ScanHistorySection({ refreshTrigger }) {
-  const [history, setHistory] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  const fetchHistory = async () => {
-    try {
-      const res = await api.get(ENDPOINTS.SCAN_HISTORY || '/api/scan/history');
-      setHistory(Array.isArray(res.data) ? res.data : []);
-    } catch (err) {
-      setError('Unable to load inspection history.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchHistory();
-  }, [refreshTrigger]);
-
-  const parseTarget = (content) => {
-    if (typeof content === 'string' && content.startsWith('[EMAIL]')) {
-      return {
-        type: 'email',
-        label: content.replace('[EMAIL]', '').trim(),
-      };
-    }
-    return {
-      type: 'url',
-      label: content || 'Unknown Target',
-    };
-  };
-
-  return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 shadow-sm space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20">
-            <History className="h-4 w-4" />
-          </div>
-          <div>
-            <h3 className="text-sm font-semibold text-white">Recent Inspection Logs</h3>
-            <p className="text-xs text-slate-400">Audit trail of previously analyzed URLs and email payloads.</p>
-          </div>
-        </div>
-        <button
-          onClick={fetchHistory}
-          className="flex items-center gap-1.5 rounded-lg border border-slate-800 bg-slate-950 px-3 py-1.5 text-xs text-slate-400 transition hover:border-slate-700 hover:text-white"
-        >
-          <RotateCw className="h-3 w-3" />
-          Refresh
-        </button>
-      </div>
-
-      {loading ? (
-        <div className="py-8 text-center text-xs text-slate-500">Loading historical audit data...</div>
-      ) : error ? (
-        <div className="py-4 text-center text-xs text-red-400">{error}</div>
-      ) : history.length === 0 ? (
-        <div className="py-8 text-center text-xs text-slate-500">
-          No scans recorded yet. Run a URL or Email check above to populate records.
-        </div>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-300">
-            <thead className="border-b border-slate-800 bg-slate-950/60 uppercase tracking-wider text-[10px] text-slate-400">
-              <tr>
-                <th className="py-3 px-4">Type</th>
-                <th className="py-3 px-4">Target / Content</th>
-                <th className="py-3 px-4">Verdict</th>
-                <th className="py-3 px-4">Risk Level</th>
-                <th className="py-3 px-4 text-right">Timestamp</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800/60">
-              {history.map((scan) => {
-                const target = parseTarget(scan.content);
-                const verdictStyle = verdictMeta(scan.result);
-                return (
-                  <tr key={scan.id} className="transition hover:bg-slate-800/40">
-                    <td className="whitespace-nowrap py-3 px-4">
-                      {target.type === 'email' ? (
-                        <span className="inline-flex items-center gap-1.5 text-emerald-400 font-medium">
-                          <Mail className="h-3.5 w-3.5" /> Email
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 text-blue-400 font-medium">
-                          <Link2 className="h-3.5 w-3.5" /> URL
-                        </span>
-                      )}
-                    </td>
-                    <td className="max-w-xs truncate py-3 px-4 font-mono text-slate-200">
-                      {target.label}
-                    </td>
-                    <td className="whitespace-nowrap py-3 px-4">
-                      <span className={classNames('px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider', verdictStyle.badgeClass)}>
-                        {scan.result}
-                      </span>
-                    </td>
-                    <td className="whitespace-nowrap py-3 px-4 text-[11px] font-semibold uppercase text-slate-400">
-                      {scan.risk_level || 'N/A'}
-                    </td>
-                    <td className="whitespace-nowrap py-3 px-4 text-right text-slate-500">
-                      {new Date(scan.created_at).toLocaleTimeString([], {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        month: 'short',
-                        day: 'numeric',
-                      })}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
-  );
-}
 
 export default function Dashboard() {
   const router = useRouter();
@@ -392,15 +271,16 @@ export default function Dashboard() {
   const [emailResult, setEmailResult] = useState(null);
   const [emailError, setEmailError] = useState('');
 
-  // Scan History Refresh State
+  // Scan History State
   const [refreshHistory, setRefreshHistory] = useState(0);
-
+  const [historyOpen, setHistoryOpen] = useState(false);
+  
   useEffect(() => {
     const token = localStorage.getItem('token');
     const name = localStorage.getItem('userName');
 
     if (!token) {
-      router.replace('/login');
+      router.replace('/login'); 
     } else {
       setUserName(name || 'Security Analyst');
       setIsChecking(false);
@@ -519,6 +399,17 @@ export default function Dashboard() {
       </header>
 
       <main className="relative mx-auto max-w-5xl space-y-6 p-6">
+         {/* Scan History Button */}
+         <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={() => setHistoryOpen(true)}
+            className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900 px-4 py-2 text-xs font-semibold text-slate-300 transition hover:border-blue-500/40 hover:bg-slate-800 hover:text-white"
+          >
+            <History className="h-4 w-4 text-blue-400" />
+            View History
+          </button>
+        </div>
         {/* Segmented tab switcher */}
         <div className="inline-flex items-center gap-1 rounded-full border border-slate-800 bg-slate-900 p-1">
           <button
@@ -843,10 +734,16 @@ export default function Dashboard() {
             </div>
           </div>
         )}
-
-        {/* Audit History Log Table */}
-        <ScanHistorySection refreshTrigger={refreshHistory} />
       </main>
+
+      {/* Scan History Modal */}
+      <ScanHistory
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        refreshTrigger={refreshHistory}
+      />
+
+
     </div>
   );
 }

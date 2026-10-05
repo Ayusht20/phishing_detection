@@ -13,6 +13,7 @@ import {
   ShieldX,
   X,
   Search,
+  Trash2,
 } from 'lucide-react';
 
 function classNames(...values) {
@@ -28,6 +29,8 @@ export default function ScanHistory({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [filter, setFilter] = useState('all');
+  const [deletingId, setDeletingId] = useState(null);
+  const [clearing, setClearing] = useState(false);
 
   const fetchHistory = useCallback(async () => {
     setLoading(true);
@@ -47,6 +50,64 @@ export default function ScanHistory({
       setLoading(false);
     }
   }, []);
+
+
+  const deleteScan = async (scanId) => {
+    const confirmed = window.confirm(
+      'Are you sure you want to delete this scan history record?'
+    );
+
+    if (!confirmed) return;
+
+    setDeletingId(scanId);
+    setError('');
+
+    try {
+      const endpoint = `${
+        ENDPOINTS?.SCAN_HISTORY || '/api/scan/history'
+      }/${scanId}`;
+
+      await api.delete(endpoint);
+
+      setHistory((currentHistory) =>
+        currentHistory.filter((scan) => scan.id !== scanId)
+      );
+    } catch (err) {
+      setError(
+        err.response?.data?.detail ||
+          'Unable to delete the scan history record.'
+      );
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const clearHistory = async () => {
+    const confirmed = window.confirm(
+      'Are you sure you want to clear your entire scan history? This action cannot be undone.'
+    );
+
+    if (!confirmed) return;
+
+    setClearing(true);
+    setError('');
+
+    try {
+      const endpoint =
+        ENDPOINTS?.SCAN_HISTORY || '/api/scan/history';
+
+      await api.delete(endpoint);
+
+      setHistory([]);
+    } catch (err) {
+      setError(
+        err.response?.data?.detail ||
+          'Unable to clear scan history.'
+      );
+    } finally {
+      setClearing(false);
+    }
+  };
 
   useEffect(() => {
     if (open) {
@@ -222,6 +283,23 @@ export default function ScanHistory({
               {filteredHistory.length === 1 ? 'record' : 'records'}
             </span>
 
+            {history.length > 0 && (
+              <button
+                type="button"
+                onClick={clearHistory}
+                disabled={clearing || loading}
+                className="flex items-center gap-1.5 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-1.5 text-xs text-red-400 transition hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Trash2
+                  className={classNames(
+                    'h-3.5 w-3.5',
+                    clearing && 'animate-pulse'
+                  )}
+                />
+                {clearing ? 'Clearing...' : 'Clear All'}
+              </button>
+            )}
+
             <button
               type="button"
               onClick={fetchHistory}
@@ -393,6 +471,21 @@ export default function ScanHistory({
                             {formattedTime}
                           </p>
                         </div>
+                        <button
+                          type="button"
+                          onClick={() => deleteScan(scan.id)}
+                          disabled={deletingId === scan.id || clearing}
+                          aria-label={`Delete scan ${scan.id}`}
+                          title="Delete this scan"
+                          className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border border-slate-800 bg-slate-950 text-slate-500 transition hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-400 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <Trash2
+                            className={classNames(
+                              'h-3.5 w-3.5',
+                              deletingId === scan.id && 'animate-pulse'
+                            )}
+                          />
+                        </button>
                       </div>
                     </div>
                   </div>

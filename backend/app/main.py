@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import Base, engine
-from app.routes import auth ,admin ,scan, email_scan,history
+from app.routes import auth ,admin ,scan, email_scan,history, admin_stats
 
 Base.metadata.create_all(bind=engine)
 app = FastAPI(title=settings.PROJECT_NAME)
@@ -21,6 +21,7 @@ app.include_router(admin.router)
 app.include_router(scan.router)
 app.include_router(email_scan.router)
 app.include_router(history.router)
+app.include_router(admin_stats.router)
 
 @app.get("/")
 def health_check():

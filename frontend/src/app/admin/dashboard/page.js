@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
+import AdminAnalytics from "@/components/AdminAnalytics";
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -117,30 +118,7 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-5">
-            <p className="text-xs uppercase tracking-wider font-semibold text-slate-400">
-              Total Accounts
-            </p>
-            <p className="mt-2 text-3xl font-extrabold text-white">{users.length}</p>
-          </div>
-          <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-5">
-            <p className="text-xs uppercase tracking-wider font-semibold text-slate-400">
-              Administrators
-            </p>
-            <p className="mt-2 text-3xl font-extrabold text-red-400">
-              {users.filter((u) => u.role === "admin").length}
-            </p>
-          </div>
-          <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-5">
-            <p className="text-xs uppercase tracking-wider font-semibold text-slate-400">
-              Standard Users
-            </p>
-            <p className="mt-2 text-3xl font-extrabold text-emerald-400">
-              {users.filter((u) => u.role === "user").length}
-            </p>
-          </div>
-        </div>
+        <AdminAnalytics />
 
         <section className="rounded-xl border border-slate-800 bg-slate-900/50 overflow-hidden shadow-sm">
           <div className="border-b border-slate-800 px-6 py-4">

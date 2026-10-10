@@ -7,4 +7,5 @@ export const ENDPOINTS = {
   SCAN_URL: '/api/scan/url',
   SCAN_EMAIL: '/api/scan/email',
   SCAN_HISTORY: '/api/scan/history',
+  ADMIN_STATS: '/api/admin/stats',
 };

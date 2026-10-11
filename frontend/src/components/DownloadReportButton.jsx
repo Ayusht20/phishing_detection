@@ -7,6 +7,11 @@ import { ENDPOINTS } from '@/constants/apiEndpoints';
 
 const BASE_ENDPOINT = ENDPOINTS?.SCAN_HISTORY || '/api/scan/history';
 
+const ACCENTS = {
+  blue: 'bg-blue-600 hover:bg-blue-500',
+  emerald: 'bg-emerald-600 hover:bg-emerald-500',
+};
+
 // Error responses arrive as a Blob when responseType is "blob",
 // so read the JSON out of it to get the server's message.
 async function readError(err, fallback) {
@@ -45,9 +50,26 @@ export async function downloadScanReport(scanId) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+// Returns the saved scan's id. Uses `id` from the scan response if the API
+// includes it, otherwise falls back to the newest history record.
+// Once /scan/url and /scan/email return `id`, the fallback never runs.
+export async function resolveScanId(data) {
+  if (data?.id) return data.id;
+
+  try {
+    const res = await api.get(BASE_ENDPOINT, {
+      params: { page: 1, page_size: 1 },
+    });
+    return res.data?.items?.[0]?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export function DownloadReportButton({
   scanId,
-  variant = 'icon', // 'icon' (history rows) | 'button' (report card)
+  variant = 'icon', // 'icon' (history rows) | 'button' (result panels)
+  accent = 'blue', // 'blue' | 'emerald' (button variant only)
   disabled = false,
   onError,
   onSuccess,
@@ -82,7 +104,7 @@ export function DownloadReportButton({
             ? 'The report is available once the scan has been saved'
             : 'Download this report as a PDF'
         }
-        className={`flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+        className={`flex items-center justify-center gap-2 rounded-lg ${ACCENTS[accent] || ACCENTS.blue} px-4 py-2 text-sm font-medium text-white transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
       >
         {busy ? (
           <RotateCw className="h-4 w-4 animate-spin" />

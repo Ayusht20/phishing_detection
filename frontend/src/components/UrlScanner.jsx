@@ -2,17 +2,23 @@
 
 import { useState } from 'react';
 import axios from 'axios';
+import {
+  DownloadReportButton,
+  resolveScanId,
+} from '@/components/DownloadReportButton';
 
 export default function UrlScanner() {
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
+  const [scanId, setScanId] = useState(null);
   const [error, setError] = useState('');
 
   const handleScan = async (e) => {
     e.preventDefault();
     setError('');
     setResult(null);
+    setScanId(null);
 
     const token = localStorage.getItem('token');
     if (!token) {
@@ -34,6 +40,9 @@ export default function UrlScanner() {
         }
       );
       setResult(response.data);
+
+      // Needed for the report download
+      resolveScanId(response.data).then(setScanId);
     } catch (err) {
       if (err.response?.status === 401) {
         setError('Session expired or unauthorized. Please re-login.');
@@ -112,6 +121,17 @@ export default function UrlScanner() {
                 {result.content}
               </p>
             </div>
+          </div>
+
+          {/* Download report */}
+          <div className="pt-3 border-t border-slate-800/60">
+            <DownloadReportButton
+              scanId={scanId}
+              variant="button"
+              accent="blue"
+              className="w-full"
+              onError={setError}
+            />
           </div>
         </div>
       )}

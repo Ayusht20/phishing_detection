@@ -6,6 +6,10 @@ import api from '@/services/api';
 import { ENDPOINTS } from '@/constants/apiEndpoints';
 import ScanHistory from '@/components/ScanHistory';
 import {
+  DownloadReportButton,
+  resolveScanId,
+} from '@/components/DownloadReportButton';
+import {
   ShieldCheck,
   ShieldAlert,
   ShieldX,
@@ -261,6 +265,7 @@ export default function Dashboard() {
   const [urlInput, setUrlInput] = useState('');
   const [urlLoading, setUrlLoading] = useState(false);
   const [urlResult, setUrlResult] = useState(null);
+  const [urlScanId, setUrlScanId] = useState(null);
   const [urlError, setUrlError] = useState('');
 
   // Email Scanner State
@@ -269,6 +274,7 @@ export default function Dashboard() {
   const [body, setBody] = useState('');
   const [emailLoading, setEmailLoading] = useState(false);
   const [emailResult, setEmailResult] = useState(null);
+  const [emailScanId, setEmailScanId] = useState(null);
   const [emailError, setEmailError] = useState('');
 
   // Scan History State
@@ -297,6 +303,7 @@ export default function Dashboard() {
     e.preventDefault();
     setUrlError('');
     setUrlResult(null);
+    setUrlScanId(null);
 
     const token = localStorage.getItem('token');
     if (!token) return router.replace('/login');
@@ -308,6 +315,9 @@ export default function Dashboard() {
       });
       setUrlResult(response.data);
       setRefreshHistory((prev) => prev + 1);
+
+      // Needed for the report download
+      resolveScanId(response.data).then(setUrlScanId);
     } catch (err) {
       setUrlError(err.response?.data?.detail || 'Failed to scan URL. Please verify server status.');
     } finally {
@@ -319,6 +329,7 @@ export default function Dashboard() {
     e.preventDefault();
     setEmailError('');
     setEmailResult(null);
+    setEmailScanId(null);
 
     const token = localStorage.getItem('token');
     if (!token) return router.replace('/login');
@@ -332,6 +343,9 @@ export default function Dashboard() {
       });
       setEmailResult(response.data);
       setRefreshHistory((prev) => prev + 1);
+
+      // Needed for the report download
+      resolveScanId(response.data).then(setEmailScanId);
     } catch (err) {
       setEmailError(err.response?.data?.detail || 'Failed to analyze email content.');
     } finally {
@@ -550,6 +564,14 @@ export default function Dashboard() {
                       {urlResult.content}
                     </p>
                   </div>
+
+                  <DownloadReportButton
+                    scanId={urlScanId}
+                    variant="button"
+                    accent="blue"
+                    className="w-full"
+                    onError={setUrlError}
+                  />
                 </div>
               )}
             </div>
@@ -729,6 +751,14 @@ export default function Dashboard() {
                     <emailVerdict.Icon className="h-4 w-4" />
                     {emailResult.result}
                   </div>
+
+                  <DownloadReportButton
+                    scanId={emailScanId}
+                    variant="button"
+                    accent="emerald"
+                    className="w-full"
+                    onError={setEmailError}
+                  />
                 </div>
               )}
             </div>

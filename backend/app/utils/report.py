@@ -63,12 +63,14 @@ UNKNOWN_VERDICT = {
 }
 
 # Optional attributes on the Scan model. Anything missing or empty is skipped,
-# so edit this list to match your model (e.g. add "indicators").
+# so the report only shows what your Scan row actually stores. These match the
+# fields returned by the email analyzer.
 EXTRA_FIELDS = [
-    ("score", "Risk score"),
-    ("confidence", "Confidence"),
-    ("reasons", "Why this verdict"),
-    ("details", "Details"),
+    ("risk_score", "Risk score"),
+    ("summary", "Summary"),
+    ("red_flags", "Identified indicators"),
+    ("links_found", "Links found"),
+    ("flagged_links", "Flagged links"),
 ]
 
 

@@ -2,7 +2,7 @@ import logging
 import math
 from typing import List, Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
@@ -12,6 +12,7 @@ from app.models.scan import Scan
 from app.models.user import User
 from app.utils.security import get_current_user
 from app.schemas.scan import ScanHistoryItem
+from app.utils.report import build_scan_report_pdf
 
 logger = logging.getLogger(__name__)
 
@@ -88,6 +89,53 @@ def get_user_scan_history(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve scan history from database.",
         )
+
+
+# --- Download a PDF report for one scan ---
+@router.get("/history/{scan_id}/report")
+def download_scan_report(
+    scan_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Returns a PDF report for a single scan belonging to the authenticated user.
+    """
+    scan = (
+        db.query(Scan)
+        .filter(
+            Scan.id == scan_id,
+            Scan.user_id == current_user.id,
+        )
+        .first()
+    )
+
+    if not scan:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Scan history record not found.",
+        )
+
+    try:
+        pdf_bytes = build_scan_report_pdf(scan, current_user)
+    except Exception as exc:
+        logger.error(
+            f"Failed to build report for scan_id={scan_id} "
+            f"user_id={current_user.id}: {exc}"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to generate the scan report.",
+        )
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="phishguard-report-{scan.id}.pdf"',
+            "Cache-Control": "no-store",
+        },
+    )
 
 
 # --- Delete a single scan ---

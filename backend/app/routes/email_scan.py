@@ -1,7 +1,7 @@
 import asyncio
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -11,6 +11,7 @@ from app.schemas.email_scan import EmailScanRequest, EmailScanResponse
 from app.services.ai_email import analyze_email_with_ai
 from app.services.email_rules import analyze_email_rules
 from app.services.safebrowsing import check_url
+from app.utils.limiter import limiter
 from app.utils.security import get_current_user
 
 logger = logging.getLogger(__name__)
@@ -46,7 +47,9 @@ async def _safe_check(url: str) -> bool:
 
 
 @router.post("/email", response_model=EmailScanResponse)
+@limiter.limit("5/minute")
 async def scan_email(
+    request: Request,
     data: EmailScanRequest,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),

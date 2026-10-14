@@ -254,7 +254,6 @@ const EMAIL_SCAN_STEPS = [
   'Auditing embedded links',
 ];
 
-
 export default function Dashboard() {
   const router = useRouter();
   const [userName, setUserName] = useState('');
@@ -280,13 +279,13 @@ export default function Dashboard() {
   // Scan History State
   const [refreshHistory, setRefreshHistory] = useState(0);
   const [historyOpen, setHistoryOpen] = useState(false);
-  
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     const name = localStorage.getItem('userName');
 
     if (!token) {
-      router.replace('/login'); 
+      router.replace('/login');
     } else {
       setUserName(name || 'Security Analyst');
       setIsChecking(false);
@@ -319,7 +318,15 @@ export default function Dashboard() {
       // Needed for the report download
       resolveScanId(response.data).then(setUrlScanId);
     } catch (err) {
-      setUrlError(err.response?.data?.detail || 'Failed to scan URL. Please verify server status.');
+      if (err.response?.status === 429) {
+        setUrlError(
+          'Rate limit reached: Maximum 5 scans per minute. Please wait a moment before trying again.'
+        );
+      } else {
+        setUrlError(
+          err.response?.data?.detail || 'Failed to scan URL. Please verify server status.'
+        );
+      }
     } finally {
       setUrlLoading(false);
     }
@@ -347,7 +354,15 @@ export default function Dashboard() {
       // Needed for the report download
       resolveScanId(response.data).then(setEmailScanId);
     } catch (err) {
-      setEmailError(err.response?.data?.detail || 'Failed to analyze email content.');
+      if (err.response?.status === 429) {
+        setEmailError(
+          'Rate limit reached: Maximum 5 scans per minute. Please wait a moment before trying again.'
+        );
+      } else {
+        setEmailError(
+          err.response?.data?.detail || 'Failed to analyze email content.'
+        );
+      }
     } finally {
       setEmailLoading(false);
     }
@@ -413,8 +428,8 @@ export default function Dashboard() {
       </header>
 
       <main className="relative mx-auto max-w-5xl space-y-6 p-6">
-         {/* Scan History Button */}
-         <div className="flex justify-end">
+        {/* Scan History Button */}
+        <div className="flex justify-end">
           <button
             type="button"
             onClick={() => setHistoryOpen(true)}
@@ -424,6 +439,7 @@ export default function Dashboard() {
             View History
           </button>
         </div>
+
         {/* Segmented tab switcher */}
         <div className="inline-flex items-center gap-1 rounded-full border border-slate-800 bg-slate-900 p-1">
           <button
@@ -772,8 +788,6 @@ export default function Dashboard() {
         onClose={() => setHistoryOpen(false)}
         refreshTrigger={refreshHistory}
       />
-
-
     </div>
   );
 }

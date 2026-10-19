@@ -1,133 +1,202 @@
-# PhishGuard
+# PhishGuard — AI-Assisted Phishing Detection
 
-PhishGuard analyzes URLs and email content for phishing. It checks links against Google Safe Browsing and VirusTotal, scores emails with keyword rules plus AI analysis, and keeps a searchable history of every scan with a downloadable PDF report.
+PhishGuard is a web application for checking suspicious URLs and email messages. It combines external URL reputation checks with email-content analysis, then presents a verdict and keeps a history of scans for later review.
 
-[![Live Demo](https://img.shields.io/badge/Live_Demo-Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://phishing-detection-pied.vercel.app)
-[![API Docs](https://img.shields.io/badge/Backend_API-FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://your-backend.onrender.com/docs)
-[![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
+<p align="center">
+  <a href="https://phishing-detection-pied.vercel.app"><strong>Open the frontend demo</strong></a>
+  &nbsp; · &nbsp;
+  <a href="https://phishing-detection-9em2.onrender.com/docs"><strong>Backend API documentation</strong></a>
+</p>
 
----
+> **Deployment note:** The repository references the Render API URL above, but this README does not claim that the live service is currently healthy. Confirm the API docs URL and the frontend's `NEXT_PUBLIC_API_URL` deployment setting before presenting the deployment as verified.
 
 ## Screenshots
 
-| Admin analytics | Scan verdict |
-| :---: | :---: |
-| ![Admin dashboard](https://raw.githubusercontent.com/Ayusht20/phishing-detection/main/assets/admin-dashboard.png) | ![Scan verdict](https://raw.githubusercontent.com/Ayusht20/phishing-detection/main/assets/scan-verdict.png) |
+Screenshots show the landing page, URL scanner, email analyzer, account creation, and scan history. The images are stored in `docs/screenshots/`.
 
-| Scan history | PDF report |
-| :---: | :---: |
-| ![Scan history](https://raw.githubusercontent.com/Ayusht20/phishing-detection/main/assets/scan-history.png) | ![PDF report](https://raw.githubusercontent.com/Ayusht20/phishing-detection/main/assets/report-preview.png) |
+| Landing page | How it works |
+|---|---|
+| ![PhishGuard landing page](docs/screenshots/landing-page.jpg) | ![Three-step workflow](docs/screenshots/how-it-works.jpg) |
 
----
+| URL scanner | Email analyzer |
+|---|---|
+| ![URL scanner](docs/screenshots/url-scanner.jpg) | ![Email analyzer](docs/screenshots/email-analyzer.jpg) |
+
+| Scan history with records | Empty scan history |
+|---|---|
+| ![Scan history](docs/screenshots/scan-history-populated.jpg) | ![Empty scan history](docs/screenshots/scan-history-empty.jpg) |
+
+| Registration | Product features |
+|---|---|
+| ![Create account page](docs/screenshots/register.jpg) | ![PhishGuard features](docs/screenshots/features.jpg) |
+
+*The screenshots are UI examples, not evidence of detection accuracy, throughput, or production uptime.*
 
 ## Features
 
-- **URL scanning:** Google Safe Browsing and VirusTotal are queried concurrently, and the results are combined into a verdict (`safe`, `suspicious`, `phishing`) with a risk level.
-- **Email analysis:** keyword and sender rules, AI analysis, and a Safe Browsing check on up to 5 embedded links. Returns a 0-100 risk score, a summary and a list of red flags.
-- **Scan history:** server-side pagination, URL/email filter, per-scan delete and clear-all.
-- **PDF reports:** download a report for any scan, either right after it finishes or from the history list.
-- **Admin console:** platform analytics (scans per day by verdict, verdict and scan-type breakdowns, most active users, latest threats) and user role management.
-- **Rate limiting:** scan endpoints are limited to 5 requests per minute per IP to protect third-party API quotas.
+- **URL scanning:** checks URLs with Google Safe Browsing and VirusTotal and combines the available results into a verdict and risk level.
+- **Email analysis:** evaluates sender, subject, and body using rule-based indicators and configured AI analysis. Extracted links can also be checked with Google Safe Browsing.
+- **Scan history:** lists previous scans, supports URL/email filters and pagination, and provides individual-record deletion and clear-all.
+- **PDF reports:** generates a downloadable PDF for a scan.
+- **User accounts:** registration and login with token-based authentication.
+- **Admin dashboard:** administrative user/role management and scan analytics.
+- **Rate limiting:** protects scan endpoints from excessive requests.
 
-## Tech stack
+## Technology stack
 
 **Frontend**
-- Next.js (App Router) and React
+- Next.js App Router and React
 - Tailwind CSS
-- Recharts
-- Lucide React
 - Axios
+- Recharts
+- Lucide React and React Icons
 
 **Backend**
-- FastAPI (Python 3.11+) with `asyncio` for concurrent API calls
-- SQLAlchemy with SQLite or PostgreSQL
-- Pydantic v2
-- JWT authentication
-- SlowAPI for rate limiting
+- Python and FastAPI
+- SQLAlchemy and Pydantic
+- PostgreSQL (deployed configuration) or SQLite where supported by configuration
+- JWT authentication and password hashing
+- `httpx` / `asyncio` for external service requests
 - ReportLab for PDF generation
-- Google Safe Browsing API v4 and VirusTotal API v3
+- SlowAPI for rate limiting
 
-## Project structure
+**External services**
+- VirusTotal API v3
+- Google Safe Browsing API
+- Groq and/or Gemini for AI-assisted email analysis, when configured
+
+## Repository structure
 
 ```text
-phishing-detection/
+phishing_detection/
 ├── backend/
 │   ├── app/
-│   │   ├── models/            # SQLAlchemy models (User, Scan)
-│   │   ├── routes/            # auth, scan, email_scan, history, admin, admin_stats
-│   │   ├── schemas/           # Pydantic request/response models
-│   │   ├── services/          # VirusTotal, Safe Browsing, email rules, AI analysis
-│   │   ├── utils/             # security (JWT), limiter, report (PDF)
-│   │   ├── database.py        # engine and session setup
-│   │   └── main.py            # app entry point, CORS, rate limiter
+│   │   ├── models/
+│   │   ├── routes/
+│   │   ├── schemas/
+│   │   ├── services/
+│   │   └── utils/
 │   ├── requirements.txt
 │   └── .env.example
-│
 ├── frontend/
 │   ├── src/
-│   │   ├── app/               # pages: dashboard, admin, login
-│   │   ├── components/        # UrlScanner, EmailScanner, ScanHistory,
-│   │   │                      # DownloadReportButton, AdminAnalytics, ...
-│   │   ├── constants/         # API endpoint map
-│   │   ├── lib/               # shared scan helpers
-│   │   └── services/          # Axios instance
-│   ├── package.json
-│   └── tailwind.config.js
+│   └── package.json
+├── docs/
+│   └── screenshots/
 └── README.md
 ```
 
-## Getting started
+## Run locally
 
-**Backend**
+### Prerequisites
 
-```bash
+- Python 3.11 or a version supported by the backend dependencies
+- Node.js and npm
+- A PostgreSQL database if using PostgreSQL locally
+- API keys for the external services you want to use
+
+### 1. Configure the backend
+
+From the repository root:
+
+```bat
 cd backend
-python -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-cp .env.example .env            # add your API keys and secrets
-uvicorn app.main:app --reload
+python -m venv .venv
+.venv\Scripts\activate
+python -m pip install -r requirements.txt
+copy .env.example .env
 ```
 
-The API runs at `http://localhost:8000`, with interactive docs at `/docs`.
+Edit `backend/.env` and set the database URL and secret values for your environment. Do not commit `.env` or paste credentials into public issues or documentation.
 
-**Frontend**
+Typical settings include:
 
-```bash
+```dotenv
+DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/DATABASE
+SECRET_KEY=replace-with-a-long-random-secret
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=60
+VIRUSTOTAL_API_KEY=
+GOOGLE_SAFE_BROWSING_API_KEY=
+GROQ_API_KEY=
+GEMINI_API_KEY=
+```
+
+Use the variable names expected by `backend/app/config.py`; keep optional provider keys empty only if the corresponding feature can run without them. Make sure the database server is running and the database exists before starting the backend.
+
+Start the API from the `backend` directory:
+
+```bat
+python -m uvicorn app.main:app --reload
+```
+
+Local API base URL: `http://127.0.0.1:8000`  
+Interactive API docs: `http://127.0.0.1:8000/docs`
+
+### 2. Configure the frontend
+
+Open a second terminal:
+
+```bat
 cd frontend
 npm install
+```
+
+Create `frontend/.env.local` and set the backend API base URL:
+
+```dotenv
+NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
+```
+
+Then start the frontend:
+
+```bat
 npm run dev
 ```
 
-The app runs at `http://localhost:3000`.
+Open `http://localhost:3000`.
 
-## Use cases
+For a deployed frontend, set `NEXT_PUBLIC_API_URL` in the hosting provider's environment-variable settings to the deployed backend's base URL (without `/docs`). Redeploy the frontend after changing it. The backend CORS configuration must also allow the frontend's origin.
 
-- **URL triage:** check a suspicious or shortened link before anyone clicks it.
-- **Email review:** paste a suspicious message to see its red flags, embedded links and a risk score.
-- **Evidence for tickets:** download a PDF report of any scan to attach to an incident or share with a colleague.
-- **Activity review:** admins can see scan volume, verdict mix and the most active users over 7, 14 or 30 days.
+## Main user workflows
 
-## Roles
+1. Register or sign in.
+2. Submit a suspicious URL in the URL scanner, or paste an email's sender, subject, and body into the email analyzer.
+3. Review the verdict, risk level, score/summary, and any detected red flags or links.
+4. Open scan history to review earlier results, filter by scan type, download a report, or delete records.
 
-**User**
-- Run URL and email scans
-- Browse, filter and delete their own scan history
-- Download PDF reports for their own scans
+Administrators can access the admin dashboard for available user-management and analytics features.
 
-**Admin**
-- Everything a user can do
-- View platform analytics at `/admin/dashboard`
-- Promote or demote other users
+## Security and limitations
 
-## Rate limiting
+- A verdict is an aid to investigation, not a guarantee that a URL or message is safe.
+- External threat feeds and AI providers can be unavailable, rate-limited, or return incomplete results.
+- Keep API keys, database credentials, JWT secrets, and production environment files out of source control.
+- Validate production CORS settings, authentication/authorization, database persistence, provider failure handling, and rate limiting before public use.
+- Do not publish detection-accuracy, scan-volume, speed, or customer-testimonial claims unless they have been measured and can be substantiated.
 
-`POST /api/scan/url` and `POST /api/scan/email` are each limited to 5 requests per minute per client IP. Exceeding the limit returns HTTP 429, and the dashboard shows a cooldown message.
+## API overview
 
-## Conclusion
+The backend provides endpoints for authentication, URL scans, email scans, scan history, PDF reports, and admin features. The interactive FastAPI documentation is available at `/docs` when the backend is running.
 
-PhishGuard bridges the gap between complex cyber threat intelligence engines and fast-paced operational workflows. By packaging asynchronous backend processing into an intuitive, telemetry-rich interface, it delivers enterprise-grade endpoint security analysis suitable for security analysts, IT administrators, and corporate defense teams.
+Common route groups include:
+
+- `/api/auth/`
+- `/api/scan/`
+- `/api/scan/history`
+- `/api/admin/`
+
+Use the live API documentation for exact request schemas and currently available endpoints.
 
 ## License
 
-MIT
+Check the repository's license file and confirm its terms before redistributing this project. If the project does not include a license file, do not assume it is MIT-licensed.
+
+
+## Conclusion
+
+PhishGuard brings URL reputation checking, email phishing analysis, scan history, PDF reporting, and administrative insights together in one web application. By combining external threat-intelligence services with rule-based and AI-assisted email analysis, it helps users examine suspicious content and understand potential warning signs.
+
+The project is intended as a decision-support tool, not a guarantee that any message or URL is safe. Its reliability depends on correct configuration, available external services, and thorough testing of the deployed environment. Before production use, the team should verify the live deployment, API configuration, authentication and authorization, database persistence, and the accuracy of any performance claims.
+
+PhishGuard provides a foundation that the team can continue improving through automated tests, clearer operational documentation, and measured evaluation of detection performance.

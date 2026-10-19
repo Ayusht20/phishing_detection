@@ -68,21 +68,28 @@ Screenshots show the landing page, URL scanner, email analyzer, account creation
 ## Repository structure
 
 ```text
-phishing_detection/
+phishing-detection/
 ├── backend/
 │   ├── app/
-│   │   ├── models/
-│   │   ├── routes/
-│   │   ├── schemas/
-│   │   ├── services/
-│   │   └── utils/
-│   ├── requirements.txt
-│   └── .env.example
+│   │   ├── models/            # SQLAlchemy ORM entities (User, Scan)
+│   │   ├── routes/            # REST API endpoints (auth, scan, history, admin)
+│   │   ├── schemas/           # Pydantic validation & response envelopes
+│   │   ├── services/          # Multi-engine inspection services (VT, SafeBrowsing)
+│   │   ├── utils/             # JWT security, defangers, token helpers
+│   │   ├── database.py        # Database sessions & engine initialization
+│   │   └── main.py            # FastAPI entry point, CORS & lifecycle
+│   ├── requirements.txt       # Python dependencies
+│   └── .env.example           # Backend environment configuration
+│
 ├── frontend/
 │   ├── src/
-│   └── package.json
-├── docs/
-│   └── screenshots/
+│   │   ├── app/               # Next.js App Router (dashboard, admin, auth)
+│   │   ├── components/        # Reusable UI (ScanHistory, AdminUI, Cards)
+│   │   ├── constants/         # API routes & route maps
+│   │   ├── services/          # Axios instance & interceptors
+│   │   └── utils/             # Defangers, formatters, dossier generator
+│   ├── package.json           # Frontend dependencies & Next scripts
+│   └── tailwind.config.js     # Design system theme
 └── README.md
 ```
 

@@ -209,11 +209,6 @@ Common route groups include:
 
 Use the live API documentation for exact request schemas and currently available endpoints.
 
-## License
-
-Check the repository's license file and confirm its terms before redistributing this project. If the project does not include a license file, do not assume it is MIT-licensed.
-
-
 ## Conclusion
 
 PhishGuard brings URL reputation checking, email phishing analysis, scan history, PDF reporting, and administrative insights together in one web application. By combining external threat-intelligence services with rule-based and AI-assisted email analysis, it helps users examine suspicious content and understand potential warning signs.

@@ -12,23 +12,37 @@ PhishGuard is a web application for checking suspicious URLs and email messages.
 
 ## Screenshots
 
-Screenshots show the landing page, URL scanner, email analyzer, account creation, and scan history. The images are stored in `docs/screenshots/`.
+Screenshots show the landing page, account creation and login, URL scanner, email analyzer, scan history, and admin dashboard. The images are stored in `docs/screenshots/`.
 
-| Landing page | How it works |
+### Landing pages
+
+| Landing page | How it works | Product features |
+|---|---|---|
+| ![PhishGuard landing page](docs/screenshots/landing-page.jpg) | ![Three-step workflow](docs/screenshots/how-it-works.jpg) | ![PhishGuard features](docs/screenshots/features.jpg) |
+
+### Authentication
+
+| Registration | Login |
 |---|---|
-| ![PhishGuard landing page](docs/screenshots/landing-page.jpg) | ![Three-step workflow](docs/screenshots/how-it-works.jpg) |
+| ![Create account page](docs/screenshots/register.jpg) | ![Login page](docs/screenshots/login.png) |
+
+### Scanners
 
 | URL scanner | Email analyzer |
 |---|---|
 | ![URL scanner](docs/screenshots/url-scanner.jpg) | ![Email analyzer](docs/screenshots/email-analyzer.jpg) |
 
+### Scan history
+
 | Scan history with records | Empty scan history |
 |---|---|
 | ![Scan history](docs/screenshots/scan-history-populated.jpg) | ![Empty scan history](docs/screenshots/scan-history-empty.jpg) |
 
-| Registration | Product features |
-|---|---|
-| ![Create account page](docs/screenshots/register.jpg) | ![PhishGuard features](docs/screenshots/features.jpg) |
+### Admin
+
+| Admin dashboard | User management | Analytics |
+|---|---|---|
+| ![Admin dashboard](docs/screenshots/admin1.png) | ![Admin user management](docs/screenshots/admin3.png) | ![Admin analytics](docs/screenshots/admin2.png) |
 
 *The screenshots are UI examples, not evidence of detection accuracy, throughput, or production uptime.*
 

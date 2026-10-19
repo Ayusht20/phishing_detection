@@ -92,6 +92,20 @@ phishing-detection/
 │   └── tailwind.config.js     # Design system theme
 └── README.md
 ```
+## Roles
+
+**User**
+- Run URL and email scans
+- Browse, filter and delete their own scan history
+- Download PDF reports for their own scans
+
+**Admin**
+- View platform analytics at `/admin/dashboard`
+- Promote or demote other users
+
+## Rate limiting
+
+`POST /api/scan/url` and `POST /api/scan/email` are each limited to 5 requests per minute per client IP. Exceeding the limit returns HTTP 429, and the dashboard shows a cooldown message.
 
 ## Run locally
 

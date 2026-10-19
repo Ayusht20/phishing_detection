@@ -36,7 +36,7 @@ Screenshots show the landing page, account creation and login, URL scanner, emai
 
 | Scan history with records | Empty scan history |
 |---|---|
-| ![Scan history](docs/screenshots/scan-history-populated.jpg) | ![Empty scan history](docs/screenshots/scan-history-empty.jpg) |
+| ![Scan history](docs/screenshots/url.png) | ![Empty scan history](docs/screenshots/email.png) |
 
 ### Admin
 

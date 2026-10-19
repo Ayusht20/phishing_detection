@@ -30,13 +30,13 @@ Screenshots show the landing page, account creation and login, URL scanner, emai
 
 | URL scanner | Email analyzer |
 |---|---|
-| ![URL scanner](docs/screenshots/url-scanner.jpg) | ![Email analyzer](docs/screenshots/email-analyzer.jpg) |
+| ![URL scanner](docs/screenshots/url.png) | ![Email analyzer](docs/screenshots/email.png) |
 
 ### Scan history
 
 | Scan history with records | Empty scan history |
 |---|---|
-| ![Scan history](docs/screenshots/url.png) | ![Empty scan history](docs/screenshots/email.png) |
+| ![Scan history](docs/screenshots/scan-history-populated.jpg) | ![Empty scan history](docs/screenshots/scan-history-empty.jpg) |
 
 ### Admin
 

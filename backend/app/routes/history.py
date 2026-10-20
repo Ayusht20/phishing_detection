@@ -1,9 +1,8 @@
 import logging
 import math
-from typing import List, Literal
+from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
-from pydantic import BaseModel, ConfigDict
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
@@ -11,7 +10,7 @@ from app.database import get_db
 from app.models.scan import Scan
 from app.models.user import User
 from app.utils.security import get_current_user
-from app.schemas.scan import ScanHistoryItem
+from app.schemas.scan import ScanHistoryPage
 from app.utils.report import build_scan_report_pdf
 
 logger = logging.getLogger(__name__)
@@ -22,18 +21,7 @@ EMAIL_PREFIX = "[EMAIL]"
 
 
 # --- Schemas ---
-class ScanHistoryPage(BaseModel):
-    """Paginated wrapper around scan history records."""
 
-    model_config = ConfigDict(from_attributes=True)
-
-    items: List[ScanHistoryItem]
-    total: int
-    page: int
-    page_size: int
-    total_pages: int
-    has_next: bool
-    has_prev: bool
 
 
 # --- List (paginated) ---
